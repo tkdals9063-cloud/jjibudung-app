@@ -1,0 +1,46 @@
+name: jjibudung
+description: Industrial posture care app
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+
+  # sensors
+  sensors_plus: ^5.0.0
+
+  # vibration
+  vibration: ^3.1.4
+
+  # 저장/포인트 관리
+  shared_preferences: ^2.2.2
+
+  # 화면꺼짐 방지용
+  wakelock_plus: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+  # 앱 아이콘 자동 생성 패키지
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/stretch/
+    - assets/exercise/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
