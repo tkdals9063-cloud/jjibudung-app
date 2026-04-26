@@ -13,33 +13,38 @@ dependencies:
 
   cupertino_icons: ^1.0.6
 
-  # sensors
+  # 센서 (가속도)
   sensors_plus: ^5.0.0
 
-  # vibration
+  # 진동
   vibration: ^3.1.4
 
-  # 저장/포인트 관리
+  # 포인트 저장
   shared_preferences: ^2.2.2
 
-  # 화면꺼짐 방지용
-  wakelock_plus: ^1.1.0
+  # 화면 항상 켜짐 (워크스크린에서 사용)
+  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^3.0.0
 
-  # 앱 아이콘 자동 생성 패키지
+  # 앱 아이콘 생성용 (이미지 경로 아래 flutter_icons에서 설정)
   flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
 
+  # 스트레칭 / 운동 GIF, 이미지
   assets:
     - assets/stretch/
     - assets/exercise/
+    # 앱 아이콘 원본 이미지 (실제 파일 위치에 맞게 추가)
+    - assets/icon/app_icon.png
 
+# flutter_launcher_icons 설정
 flutter_icons:
   android: true
   ios: true

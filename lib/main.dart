@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'permission_screen.dart';
 import 'welcome_screen.dart';
 
 void main() {
@@ -12,8 +13,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: '찌뿌둥',
-      home: const WelcomeScreen(),
+      initialRoute: "/permission",
+      routes: {
+        "/permission": (_) => const PermissionScreen(),
+        "/welcome": (_) => const WelcomeScreen(),
+      },
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        useMaterial3: true,
+      ),
     );
   }
 }

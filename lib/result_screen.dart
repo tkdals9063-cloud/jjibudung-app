@@ -49,52 +49,111 @@ class ResultScreen extends StatelessWidget {
       );
     }
 
-    // 홈으로 이동
-    Navigator.pop(context);
+    Navigator.pop(context); // 홈으로 이동
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F2FC), // ✨ 연보라 배경
       appBar: AppBar(
+        backgroundColor: const Color(0xFF725AC1),
         title: const Text("근무 결과"),
         centerTitle: true,
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Text(
-              "총 근무 시간: ${_formatDuration(totalSeconds)}",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+            // -------------------------
+            //  📌 카드 1: 총 근무 시간
+            // -------------------------
+            _buildCard(
+              title: "총 근무 시간",
+              content: _formatDuration(totalSeconds),
             ),
-            const SizedBox(height: 10),
-            Text(
-              "나쁜 자세 누적 시간: ${_formatDuration(badSeconds)}",
-              style: const TextStyle(fontSize: 18, color: Colors.redAccent),
-            ),
-            const SizedBox(height: 30),
-            Text(
-              "근무 포인트: $workPoints 점",
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            const SizedBox(height: 20),
+
+            // -------------------------
+            //  📌 카드 2: 나쁜 자세 누적
+            // -------------------------
+            _buildCard(
+              title: "나쁜 자세 누적 시간",
+              content: _formatDuration(badSeconds),
+              highlight: Colors.redAccent,
             ),
 
             const Spacer(),
 
+            // -------------------------
+            //  📌 스트레칭 버튼 (위로 올림)
+            // -------------------------
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => _goToStretch(context),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text("스트레칭 추천 받기"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF725AC1),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  "스트레칭 추천 받기",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
+
+            const SizedBox(height: 30), // ← 하단 여백 확보
           ],
         ),
+      ),
+    );
+  }
+
+  // ================================================================
+  // ⭐ 재사용 가능한 카드 컴포넌트 — WorkScreen과 톤 맞춤
+  // ================================================================
+  Widget _buildCard({
+    required String title,
+    required String content,
+    Color highlight = const Color(0xFF725AC1),
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: Colors.grey)),
+          const SizedBox(height: 10),
+          Text(
+            content,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: highlight,
+            ),
+          ),
+        ],
       ),
     );
   }
