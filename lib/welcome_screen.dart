@@ -20,7 +20,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Future<void> _loadPoints() async {
-    final p = await PointManager.getPoints();
+    final p = await PointManager.getTotalPoints();
     setState(() {
       _currentPoints = p;
     });

@@ -18,8 +18,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
 
   // 🔧 백그라운드 설정
   Future<void> _openBackgroundSettings() async {
-    await openAppSettings();
-  }
+  await _channel.invokeMethod("openBackgroundSettings");
+}
 
   // 🔧 배터리 최적화 해제 요청
   Future<void> _requestBatteryOptimization() async {

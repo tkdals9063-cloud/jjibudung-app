@@ -24,6 +24,8 @@ dependencies:
 
   # 화면 항상 켜짐 (워크스크린에서 사용)
   wakelock_plus: ^1.2.8
+  android_intent_plus: ^6.0.0
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:
