@@ -27,6 +27,9 @@ dependencies:
   android_intent_plus: ^6.0.0
   package_info_plus: ^9.0.1
 
+  # 근접 센서 (절전모드 자동 감지)
+  proximity_sensor: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'angle_calibration_screen.dart';
+import 'played_screen.dart';
 
 class ModeSelectScreen extends StatelessWidget {
   const ModeSelectScreen({super.key});
@@ -19,6 +20,17 @@ class ModeSelectScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("근무 모드 선택"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PlayedScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

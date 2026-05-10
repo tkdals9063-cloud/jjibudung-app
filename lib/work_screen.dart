@@ -1,9 +1,11 @@
 // lib/work_screen.dart
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:vibration/vibration.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
 
 import 'point_manager.dart';
 import 'result_screen.dart';
@@ -29,6 +31,7 @@ class _WorkScreenState extends State<WorkScreen>
   static const int _badThresholdSeconds = 1800;
 
   StreamSubscription<AccelerometerEvent>? _sensorSub;
+  StreamSubscription<int>? _proximitySub;
   Timer? _timer;
 
   int _totalSeconds = 0;
@@ -56,6 +59,7 @@ class _WorkScreenState extends State<WorkScreen>
 
     _startMonitoring();
     NativePostureService.start(widget.baselineAngle, widget.mode);
+    _startProximitySensor();
 
     // 🔥 절전 애니메이션: fade + scale
     _animController = AnimationController(
@@ -65,6 +69,23 @@ class _WorkScreenState extends State<WorkScreen>
 
     _fadeAnim = Tween<double>(begin: 0, end: 1).animate(_animController);
     _scaleAnim = Tween<double>(begin: 0.8, end: 1.0).animate(_animController);
+  }
+
+  // -------------------------
+  // 근접 센서
+  // -------------------------
+  void _startProximitySensor() {
+    if (!Platform.isAndroid) return;
+    _proximitySub = ProximitySensor.events.listen((int event) {
+      final isNear = event > 0;
+      if (isNear && !_sleepMode) {
+        WakelockPlus.disable();
+        _toggleSleepMode();
+      } else if (!isNear && _sleepMode) {
+        WakelockPlus.enable();
+        _toggleSleepMode();
+      }
+    });
   }
 
   // -------------------------
@@ -190,6 +211,7 @@ class _WorkScreenState extends State<WorkScreen>
     WakelockPlus.disable();
     _timer?.cancel();
     _sensorSub?.cancel();
+    _proximitySub?.cancel();
     if (_isVibrating) Vibration.cancel();
     NativePostureService.stop();
     _animController.dispose();
