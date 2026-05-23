@@ -11,11 +11,15 @@ class PlayedScreen extends StatefulWidget {
 class _PlayedScreenState extends State<PlayedScreen> {
   int _selectedTab = 0;
   int _totalPoints = 0;
+  DateTime _focusedDate = DateTime.now();
 
   // 추후 실제 데이터로 교체
-  final List<Map<String, int>> _dayData = List.generate(24, (_) => {'good': 0, 'bad': 0});
-  final List<Map<String, int>> _weekData = List.generate(7, (_) => {'good': 0, 'bad': 0});
-  final List<Map<String, int>> _monthData = List.generate(31, (_) => {'good': 0, 'bad': 0});
+  final List<Map<String, int>> _dayData =
+      List.generate(24, (_) => {'good': 0, 'bad': 0});
+  final List<Map<String, int>> _weekData =
+      List.generate(7, (_) => {'good': 0, 'bad': 0});
+  final List<Map<String, int>> _monthData =
+      List.generate(31, (_) => {'good': 0, 'bad': 0});
 
   @override
   void initState() {
@@ -25,13 +29,116 @@ class _PlayedScreenState extends State<PlayedScreen> {
 
   Future<void> _load() async {
     final p = await PointManager.getTotalPoints();
+    if (!mounted) return;
     setState(() => _totalPoints = p);
+  }
+
+  List<Map<String, int>> get _currentData {
+    switch (_selectedTab) {
+      case 0:
+        return _dayData;
+      case 1:
+        return _weekData;
+      case 2:
+        return _monthData;
+      default:
+        return _dayData;
+    }
+  }
+
+  List<String> get _currentLabels {
+    switch (_selectedTab) {
+      case 0:
+        return List.generate(24, (i) {
+          if (i == 0) return "0시";
+          if (i == 6) return "6시";
+          if (i == 12) return "12시";
+          if (i == 18) return "18시";
+          return "";
+        });
+      case 1:
+        return ["월", "화", "수", "목", "금", "토", "일"];
+      case 2:
+        return List.generate(31, (i) {
+          if (i == 0) return "1";
+          if (i == 9) return "10";
+          if (i == 19) return "20";
+          if (i == 30) return "31";
+          return "";
+        });
+      default:
+        return const [];
+    }
+  }
+
+  int get _totalGood {
+    return _currentData.fold<int>(
+      0,
+      (sum, e) => sum + (e['good'] ?? 0),
+    );
+  }
+
+  int get _totalBad {
+    return _currentData.fold<int>(
+      0,
+      (sum, e) => sum + (e['bad'] ?? 0),
+    );
+  }
+
+  int get _totalTracked {
+    return _totalGood + _totalBad;
+  }
+
+  double get _goodRate {
+    if (_totalTracked == 0) return 0;
+    return (_totalGood / _totalTracked) * 100;
+  }
+
+  String get _summaryLabel {
+    if (_totalTracked == 0) return "기록 없음";
+    if (_goodRate >= 85) return "매우 안정적";
+    if (_goodRate >= 70) return "양호";
+    if (_goodRate >= 50) return "주의";
+    return "개선 필요";
+  }
+
+  String get _summaryText {
+    if (_totalTracked == 0) {
+      return "아직 누적된 기록이 없어요. 측정이 쌓이면 패턴이 표시됩니다.";
+    }
+
+    switch (_selectedTab) {
+      case 0:
+        return "오늘의 시간대별 자세 흐름을 확인할 수 있어요.";
+      case 1:
+        return "이번 주 동안의 자세 유지 패턴을 확인할 수 있어요.";
+      case 2:
+        return "이번 달 누적 추세를 확인할 수 있어요.";
+      default:
+        return "";
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.year}년 ${date.month}월 ${date.day}일";
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _focusedDate,
+      firstDate: DateTime(_focusedDate.year, 1, 1),
+      lastDate: _focusedDate,
+    );
+
+    if (picked != null && mounted) {
+      setState(() => _focusedDate = picked);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
-    final dateStr = "${today.year}년 ${today.month}월 ${today.day}일";
+    final tabs = ["일", "주", "월"];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F2FC),
@@ -48,14 +155,7 @@ class _PlayedScreenState extends State<PlayedScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_month_rounded, color: Colors.white),
-            onPressed: () {
-              showDatePicker(
-                context: context,
-                initialDate: today,
-                firstDate: DateTime(today.year, 1, 1),
-                lastDate: today,
-              );
-            },
+            onPressed: _pickDate,
           ),
         ],
       ),
@@ -64,13 +164,27 @@ class _PlayedScreenState extends State<PlayedScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(dateStr, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+            Text(
+              _formatDate(_focusedDate),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
             const SizedBox(height: 4),
-            const Text("오늘", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-
-            _tabButtons(),
+            const Text(
+              "기록",
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              "스크린타임처럼 누적된 자세 흐름을 확인하세요.",
+              style: TextStyle(fontSize: 13, color: Colors.black54),
+            ),
             const SizedBox(height: 20),
+
+            _tabButtons(tabs),
+            const SizedBox(height: 20),
+
+            _summaryCard(),
+            const SizedBox(height: 16),
 
             _buildChart(),
             const SizedBox(height: 16),
@@ -82,7 +196,7 @@ class _PlayedScreenState extends State<PlayedScreen> {
                 _legend(Colors.redAccent, "나쁜 자세"),
               ],
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
 
             _statCard(
               icon: Icons.star_rounded,
@@ -96,8 +210,7 @@ class _PlayedScreenState extends State<PlayedScreen> {
     );
   }
 
-  Widget _tabButtons() {
-    final tabs = ["일", "주", "월"];
+  Widget _tabButtons(List<String> tabs) {
     return Row(
       children: List.generate(3, (i) {
         final selected = _selectedTab == i;
@@ -109,7 +222,9 @@ class _PlayedScreenState extends State<PlayedScreen> {
             decoration: BoxDecoration(
               color: selected ? const Color(0xFF725AC1) : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 4),
+              ],
             ),
             child: Text(
               tabs[i],
@@ -125,34 +240,120 @@ class _PlayedScreenState extends State<PlayedScreen> {
     );
   }
 
+  Widget _summaryCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _selectedTab == 0
+                ? "오늘 요약"
+                : _selectedTab == 1
+                    ? "이번 주 요약"
+                    : "이번 달 요약",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF725AC1),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _miniStat(
+                  "좋은 자세 비율",
+                  _totalTracked == 0 ? "-" : "${_goodRate.toStringAsFixed(0)}%",
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _miniStat(
+                  "기록 수",
+                  "$_totalTracked",
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _summaryLabel,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _summaryText,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black54,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniStat(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F2FC),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF725AC1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildChart() {
     switch (_selectedTab) {
       case 0:
         return _barChart(
           data: _dayData,
-          labels: List.generate(24, (i) {
-            if (i == 0) return "0시";
-            if (i == 6) return "6시";
-            if (i == 12) return "12시";
-            if (i == 18) return "18시";
-            return "";
-          }),
+          labels: _currentLabels,
         );
       case 1:
         return _barChart(
           data: _weekData,
-          labels: ["월", "화", "수", "목", "금", "토", "일"],
+          labels: _currentLabels,
         );
       case 2:
         return _barChart(
           data: _monthData,
-          labels: List.generate(31, (i) {
-            if (i == 0) return "1";
-            if (i == 9) return "10";
-            if (i == 19) return "20";
-            if (i == 30) return "31";
-            return "";
-          }),
+          labels: _currentLabels,
         );
       default:
         return const SizedBox();
@@ -165,7 +366,8 @@ class _PlayedScreenState extends State<PlayedScreen> {
   }) {
     final maxVal = data.fold<int>(
       1,
-      (prev, e) => (e['good']! + e['bad']!) > prev ? e['good']! + e['bad']! : prev,
+      (prev, e) =>
+          (e['good']! + e['bad']!) > prev ? e['good']! + e['bad']! : prev,
     );
     const chartHeight = 160.0;
 
@@ -174,7 +376,13 @@ class _PlayedScreenState extends State<PlayedScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          )
+        ],
       ),
       child: SizedBox(
         height: chartHeight + 24,
@@ -182,8 +390,10 @@ class _PlayedScreenState extends State<PlayedScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(data.length, (i) {
             final total = data[i]['good']! + data[i]['bad']!;
-            final goodH = total == 0 ? 0.0 : (data[i]['good']! / maxVal) * chartHeight;
-            final badH = total == 0 ? 0.0 : (data[i]['bad']! / maxVal) * chartHeight;
+            final goodH =
+                total == 0 ? 0.0 : (data[i]['good']! / maxVal) * chartHeight;
+            final badH =
+                total == 0 ? 0.0 : (data[i]['bad']! / maxVal) * chartHeight;
             final label = i < labels.length ? labels[i] : "";
 
             return Expanded(
@@ -197,16 +407,22 @@ class _PlayedScreenState extends State<PlayedScreen> {
                         height: goodH,
                         decoration: BoxDecoration(
                           color: Colors.green,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(3),
+                          ),
                         ),
                       ),
                       Container(
                         height: badH > 0 ? badH : 6,
                         decoration: BoxDecoration(
-                          color: total == 0 ? Colors.grey.withOpacity(0.15) : Colors.redAccent,
+                          color: total == 0
+                              ? Colors.grey.withOpacity(0.15)
+                              : Colors.redAccent,
                           borderRadius: goodH == 0
                               ? BorderRadius.circular(3)
-                              : const BorderRadius.vertical(bottom: Radius.circular(3)),
+                              : const BorderRadius.vertical(
+                                  bottom: Radius.circular(3),
+                                ),
                         ),
                       ),
                     ],
@@ -250,7 +466,13 @@ class _PlayedScreenState extends State<PlayedScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))],
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          )
+        ],
       ),
       child: Row(
         children: [
@@ -260,7 +482,11 @@ class _PlayedScreenState extends State<PlayedScreen> {
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF725AC1)),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF725AC1),
+            ),
           ),
         ],
       ),

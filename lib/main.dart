@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'permission_screen.dart';
+import 'permission_screen.dart' as ps;
 import 'welcome_screen.dart';
 
 void main() {
@@ -15,11 +15,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: "/permission",
       routes: {
-        "/permission": (_) => const PermissionScreen(),
+        "/permission": (_) => const ps.PermissionScreen(),
         "/welcome": (_) => const WelcomeScreen(),
       },
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueAccent,
+        ),
         useMaterial3: true,
       ),
     );
