@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'point_manager.dart';
+import 'posture_type.dart';
 
 class StretchItem {
   final String name;      // 화면에 보여줄 이름 (한글)
@@ -17,11 +18,13 @@ class StretchItem {
 }
 
 class StretchScreen extends StatefulWidget {
-  final int basePoints; // ResultScreen 에서 넘어온 근무 포인트
+  final int basePoints;
+  final PostureType postureType;
 
   const StretchScreen({
     super.key,
     required this.basePoints,
+    required this.postureType,
   });
 
   @override

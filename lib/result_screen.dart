@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'stretch_screen.dart';
+import 'posture_type.dart';
 
 class ResultScreen extends StatelessWidget {
   final int totalSeconds;
@@ -127,6 +128,10 @@ class ResultScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
             const SizedBox(height: 8),
 
             Container(
@@ -289,7 +294,11 @@ class ResultScreen extends StatelessWidget {
               ),
             ),
 
-            const Spacer(),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
 
             SizedBox(
               width: double.infinity,
@@ -309,7 +318,7 @@ class ResultScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 24),
           ],
         ),
       ),

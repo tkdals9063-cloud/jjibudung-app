@@ -10,6 +10,8 @@ import 'package:proximity_sensor/proximity_sensor.dart';
 import 'point_manager.dart';
 import 'result_screen.dart';
 import 'native_service.dart';
+import 'posture_type.dart';
+import 'session_manager.dart';
 
 class WorkScreen extends StatefulWidget {
   final String mode;
@@ -42,9 +44,15 @@ class _WorkScreenState extends State<WorkScreen>
   bool _isPaused = false;
   bool _isVibrating = false;
 
-  bool _sleepMode = false;
+  int _anteriorBadSeconds = 0;
+  int _posteriorBadSeconds = 0;
+  double _lastAngleDiff = 0;
 
-  DateTime? _lastTimestamp;
+  int _currentHour = DateTime.now().hour;
+  int _hourGoodSeconds = 0;
+  int _hourBadSeconds = 0;
+
+  bool _sleepMode = false;
 
   // 🌙 애니메이션 컨트롤러
   late AnimationController _animController;
@@ -72,7 +80,7 @@ class _WorkScreenState extends State<WorkScreen>
   }
 
   // -------------------------
-  // 근접 센서
+  // 근접 센서 
   // -------------------------
   void _startProximitySensor() {
     if (!Platform.isAndroid) return;
@@ -94,11 +102,12 @@ class _WorkScreenState extends State<WorkScreen>
   void _startMonitoring() {
     _sensorSub = accelerometerEventStream().listen((event) {
       final angle = event.y * 10;
-      final diff = (angle - widget.baselineAngle).abs();
+      final diff = angle - widget.baselineAngle;
 
       if (!mounted) return;
       setState(() {
-        _isBad = !_isPaused && diff >= _angleThreshold;
+        _lastAngleDiff = diff;
+        _isBad = !_isPaused && diff.abs() >= _angleThreshold;
       });
     });
 
@@ -106,30 +115,37 @@ class _WorkScreenState extends State<WorkScreen>
   }
 
   void _tick() {
-    if (!mounted || _isPaused) {
-      _lastTimestamp = null;
-      return;
-    }
+    if (!mounted || _isPaused) return;
 
     final now = DateTime.now();
-    if (_lastTimestamp == null) {
-      _lastTimestamp = now;
-      return;
+
+    if (now.hour != _currentHour) {
+      SessionManager.addHourData(
+        DateTime(now.year, now.month, now.day, _currentHour),
+        _currentHour,
+        _hourGoodSeconds,
+        _hourBadSeconds,
+      );
+      _currentHour = now.hour;
+      _hourGoodSeconds = 0;
+      _hourBadSeconds = 0;
     }
 
-    final diff = now.difference(_lastTimestamp!).inSeconds;
-    _lastTimestamp = now;
-
-    if (diff < 1 || diff > 5) return;
-
     setState(() {
-      _totalSeconds += diff;
+      _totalSeconds += 1;
 
       if (_isBad) {
-        _badTotalSeconds += diff;
-        _badContinuousSeconds += diff;
+        _badTotalSeconds += 1;
+        _badContinuousSeconds += 1;
+        _hourBadSeconds += 1;
+        if (_lastAngleDiff > 0) {
+          _anteriorBadSeconds += 1;
+        } else {
+          _posteriorBadSeconds += 1;
+        }
       } else {
         _badContinuousSeconds = 0;
+        _hourGoodSeconds += 1;
       }
     });
 
@@ -181,8 +197,20 @@ class _WorkScreenState extends State<WorkScreen>
     if (_isVibrating) Vibration.cancel();
     WakelockPlus.disable();
 
+    final now = DateTime.now();
+    await SessionManager.addHourData(
+      DateTime(now.year, now.month, now.day, _currentHour),
+      _currentHour,
+      _hourGoodSeconds,
+      _hourBadSeconds,
+    );
+
     final workPoints = await PointManager.addWorkPoints(_totalSeconds);
     if (!mounted) return;
+
+    final postureType = _anteriorBadSeconds >= _posteriorBadSeconds
+        ? PostureType.anteriorTilt
+        : PostureType.posteriorTilt;
 
     Navigator.pushReplacement(
       context,
@@ -191,6 +219,7 @@ class _WorkScreenState extends State<WorkScreen>
           totalSeconds: _totalSeconds,
           badSeconds: _badTotalSeconds,
           workPoints: workPoints,
+          postureType: postureType,
         ),
       ),
     );

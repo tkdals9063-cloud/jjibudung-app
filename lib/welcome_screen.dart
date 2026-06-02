@@ -1,4 +1,3 @@
-// lib/welcome_screen.dart
 import 'package:flutter/material.dart';
 import 'point_manager.dart';
 import 'mode_select_screen.dart';
