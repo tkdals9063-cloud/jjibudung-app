@@ -43,7 +43,7 @@ class _AngleCalibrationScreenState extends State<AngleCalibrationScreen> {
 
   /// 가속도 센서 구독
   void _listenSensor() {
-    _sensorSub = accelerometerEvents.listen((event) {
+    _sensorSub = accelerometerEventStream().listen((event) {
       final angle = event.y; // ⚠ WorkScreen 과 동일하게 y 값 그대로 사용
 
       if (!mounted) return;
