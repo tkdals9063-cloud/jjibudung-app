@@ -43,14 +43,17 @@ class _AngleCalibrationScreenState extends State<AngleCalibrationScreen> {
 
   /// 가속도 센서 구독
   void _listenSensor() {
-    _sensorSub = accelerometerEventStream().listen((event) {
-      final angle = event.y; // ⚠ WorkScreen 과 동일하게 y 값 그대로 사용
-
-      if (!mounted) return;
-      setState(() {
-        _currentAngle = angle;
-      });
-    });
+    _sensorSub = accelerometerEventStream().listen(
+      (event) {
+        final angle = event.y;
+        if (!mounted) return;
+        setState(() {
+          _currentAngle = angle;
+        });
+      },
+      onError: (e) { debugPrint('Accelerometer error: $e'); },
+      cancelOnError: false,
+    );
   }
 
   /// 1초마다 기준자세 유지 시간을 체크

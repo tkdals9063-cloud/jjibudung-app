@@ -100,16 +100,20 @@ class _WorkScreenState extends State<WorkScreen>
   // 센서 + 타이머
   // -------------------------
   void _startMonitoring() {
-    _sensorSub = accelerometerEventStream().listen((event) {
-      final angle = event.y * 10;
-      final diff = angle - widget.baselineAngle;
+    _sensorSub = accelerometerEventStream().listen(
+      (event) {
+        final angle = event.y * 10;
+        final diff = angle - widget.baselineAngle;
 
-      if (!mounted) return;
-      setState(() {
-        _lastAngleDiff = diff;
-        _isBad = !_isPaused && diff.abs() >= _angleThreshold;
-      });
-    });
+        if (!mounted) return;
+        setState(() {
+          _lastAngleDiff = diff;
+          _isBad = !_isPaused && diff.abs() >= _angleThreshold;
+        });
+      },
+      onError: (e) => debugPrint('Accelerometer error: $e'),
+      cancelOnError: false,
+    );
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
