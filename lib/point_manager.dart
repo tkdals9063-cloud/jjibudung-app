@@ -24,4 +24,10 @@ class PointManager {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(key) ?? 0;
   }
+
+  static Future<void> usePoints(int amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    final old = prefs.getInt(key) ?? 0;
+    await prefs.setInt(key, (old - amount).clamp(0, old));
+  }
 }

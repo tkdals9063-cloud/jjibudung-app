@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'permission_screen.dart' as ps;
 import 'welcome_screen.dart';
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: "/permission",
+      initialRoute: Platform.isAndroid ? "/permission" : "/welcome",
       routes: {
         "/permission": (_) => const ps.PermissionScreen(),
         "/welcome": (_) => const WelcomeScreen(),

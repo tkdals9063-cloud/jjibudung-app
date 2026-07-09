@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMotionUsageDescription</key>
+	<string>자세 감지를 위해 기기의 동작 센서를 사용합니다.</string>
 </dict>
 </plist>
